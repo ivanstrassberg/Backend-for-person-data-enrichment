@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 var ExtAPIs []string = []string{
@@ -26,10 +28,16 @@ func (s *APIServer) RunAPIServer() {
 
 func (r Router) HandleEndpoints(s *APIServer) {
 	m := r.mux
+	m.Handle("/swagger/", httpSwagger.WrapHandler)
+
 	m.HandleFunc("GET /people", makeHTTPHandleFunc(s.handleGetPeopleWithPagination))
+
 	m.HandleFunc("POST /people", makeHTTPHandleFunc(s.handleCreatePeople))
+
 	m.HandleFunc("PATCH /people/{id}", makeHTTPHandleFunc(s.handleUpdatePeopleSkipEnrich))
+
 	m.HandleFunc("PUT /people/enrich/{id}", makeHTTPHandleFunc(s.handleUpdatePeopleEnrich))
+
 	m.HandleFunc("DELETE /people/{id}", makeHTTPHandleFunc(s.handleDeletePeople))
 }
 

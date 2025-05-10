@@ -3,6 +3,7 @@ package main
 import (
 	api "api"
 	db "db"
+	_ "docs"
 	"flag"
 	"log"
 

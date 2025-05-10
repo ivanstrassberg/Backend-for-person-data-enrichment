@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
-	"runtime"
 
 	"github.com/pressly/goose/v3"
 
@@ -30,10 +28,8 @@ func NewConnString() string {
 }
 
 func RunMigrations(db *sql.DB) error {
-	_, callerPath, _, _ := runtime.Caller(0)
-	migrationsPath := filepath.Join(filepath.Dir(filepath.Dir(callerPath)), "db", "migrations")
 
-	goose.SetBaseFS(os.DirFS(migrationsPath))
+	goose.SetBaseFS(os.DirFS("./db/migrations"))
 
 	if err := goose.Up(db, "."); err != nil {
 		return fmt.Errorf("goose up failed: %w", err)
@@ -90,27 +86,3 @@ func Init(db *sql.DB, dbName, userName, userPassword string) error {
 	return nil
 
 }
-
-// ostgres=# create user em_user with PASSWORD 'effectivemobile';
-// CREATE ROLE
-// postgres=# GRANT ALL PRIVILEGES ON DATABASE effective_mobile TO em_user;
-// GRANTostgres=# create user em_user with PASSWORD 'effectivemobile';
-// CREATE ROLE
-// postgres=# GRANT ALL PRIVILEGES ON DATABASE effective_mobile TO em_user;
-// GRANT
-
-// ALTER DEFAULT PRIVILEGES IN SCHEMA public
-// GRANT ALL PRIVILEGES ON TABLES TO em_user;
-// GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO em_user;
-// GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO em_user;
-// GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO em_user;
-// -- GRANT ALL PRIVILEGES ON SCHEMA public TO em_user;
-
-// -- ALTER DEFAULT PRIVILEGES IN SCHEMA public
-// -- GRANT ALL PRIVILEGES ON TABLES TO em_user;
-
-// -- ALTER DEFAULT PRIVILEGES IN SCHEMA public
-// -- GRANT ALL PRIVILEGES ON SEQUENCES TO em_user;
-
-// -- GRANT CONNECT ON DATABASE effective_mobile to em_user;
-// -- GRANT CREATE ON DATABASE effective_mobile to em_user;
