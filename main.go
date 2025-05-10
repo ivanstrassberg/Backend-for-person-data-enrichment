@@ -5,7 +5,6 @@ import (
 	db "db"
 	"flag"
 	"log"
-	"os"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
@@ -26,8 +25,7 @@ func main() {
 		log.Fatalf("Failed to connect to DB: %v", err)
 	}
 
-	apiPort := os.Getenv("API_PORT")
-	server := api.NewAPIServer(apiPort, *pgStore)
+	server := api.NewAPIServer(":8080", *pgStore)
 
 	server.RunAPIServer()
 }

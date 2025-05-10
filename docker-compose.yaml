@@ -1,0 +1,56 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: go_api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DB_USER=em_user
+      - DB_PASSWORD=effectivemobile
+      - DB_NAME=effective_mobile
+      - DB_PORT=5432
+      - DB_HOST=db
+      - DB_SSLMODE=disable
+      - GOOSE_DRIVER=postgres
+      - GOOSE_MIGRATION_DIR=./db/migrations
+    volumes:
+      - .:/app
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+
+  db:
+    image: postgres:15
+    container_name: postgres_em
+    restart: always
+    environment:
+      POSTGRES_USER: em_user
+      POSTGRES_PASSWORD: effectivemobile
+      POSTGRES_DB: effective_mobile
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+
+volumes:
+  pgdata:

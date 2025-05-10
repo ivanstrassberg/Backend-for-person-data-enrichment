@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
@@ -33,7 +32,6 @@ type APIResponse struct {
 func WriteJson(w http.ResponseWriter, code int, v any, logErr ...any) error {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(code)
-	log.Println("error", logErr)
 	return json.NewEncoder(w).Encode(v)
 }
 
@@ -43,11 +41,29 @@ type Router struct {
 
 func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if err := f(w, r); err != nil {
+		start := time.Now()
+
+		err := f(w, r)
+		duration := time.Since(start)
+
+		requestLogs := map[string]interface{}{
+			"method":      r.Method,
+			"url":         r.URL.String(),
+			"remote_addr": r.RemoteAddr,
+			"user_agent":  r.UserAgent(),
+			"duration":    duration.String(),
+		}
+
+		if len(r.URL.Query()) > 0 {
+			requestLogs["query_params"] = r.URL.Query()
+		}
+
+		if err != nil {
+			requestLogs["error"] = err.Error()
 			WriteJson(w, http.StatusBadRequest, apiErr{Error: err.Error()})
 		}
-		incomingReq := fmt.Sprintf("%s %s", r.Method, strings.Split(r.Pattern, " ")[1])
-		log.Printf("incoming request %s", incomingReq)
+
+		log.Printf("incoming request: %+v", requestLogs)
 	}
 }
 

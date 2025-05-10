@@ -8,9 +8,9 @@ type PersonReq struct {
 
 type PersonEnriched struct {
 	PersonReq
-	Age         int
-	Gender      string
-	Nationality string
+	Age         int    `json:"age"`
+	Gender      string `json:"gender"`
+	Nationality string `json:"nationality"`
 }
 
 type AgeResp struct {
