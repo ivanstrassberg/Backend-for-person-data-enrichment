@@ -49,6 +49,23 @@ type PaginatedFilteredResults struct {
 	People         []db.Person `json:"people"`
 }
 
+// @Summary Список людей с фильтрацией и пагинацией
+// @Description Получить пагинированный список людей с возможностью фильтрации по различным параметрам
+// @Tags people
+// @Accept  json
+// @Produce  json
+// @Param fname query string false "Фильтрация по имени (частичное совпадение)"
+// @Param surname query string false "Фильтрация по фамилии (частичное совпадение)"
+// @Param patronymic query string false "Фильтрация по отчество"
+// @Param age query int false "Фильтрация по возрасту"
+// @Param nationality query string false "Фильтрация по национальности"
+// @Param gender query string false "Фильтрация по полу"
+// @Param page query int false "Номер страницы (по умолчанию: 1)" default(1)
+// @Param entries query int false "Количество записей на странице (по умолчанию: 10)" default(10)
+// @Success 200 {object} PaginatedFilteredResults
+// @Failure 400 {object} ApiError
+// @Failure 500 {object} ApiError
+// @Router /people [get]
 func (s *APIServer) handleGetPeopleWithPagination(w http.ResponseWriter, r *http.Request) error {
 	query := r.URL.Query()
 
@@ -100,6 +117,16 @@ func parseIntPagination(s string, count int) int {
 	return countInt
 }
 
+// @Summary Создание нового человека с обогащением данных
+// @Description Создание новой записи о человеке с автоматическим обогащением данных из внешних API
+// @Tags people
+// @Accept  json
+// @Produce  json
+// @Param person body PersonReq true "Данные о человеке"
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ApiError
+// @Failure 500 {object} ApiError
+// @Router /people [post]
 func (s *APIServer) handleCreatePeople(w http.ResponseWriter, r *http.Request) error {
 	person := new(PersonReq)
 	if err := json.NewDecoder(r.Body).Decode(person); err != nil {
@@ -129,6 +156,18 @@ func (s *APIServer) handleCreatePeople(w http.ResponseWriter, r *http.Request) e
 	return WriteJson(w, http.StatusOK, "ok")
 }
 
+// @Summary Обновление данных человека без обогащения
+// @Description Частичное обновление записи о человеке (без обогащения данных)
+// @Tags people
+// @Accept  json
+// @Produce  json
+// @Param id path int true "ID человека"
+// @Param person body PersonEnriched true "Частичные данные человека"
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ApiError
+// @Failure 404 {object} ApiError
+// @Failure 500 {object} ApiError
+// @Router /people/{id} [patch]
 func (s *APIServer) handleUpdatePeopleSkipEnrich(w http.ResponseWriter, r *http.Request) error {
 	idStr := r.PathValue("id")
 
@@ -156,6 +195,18 @@ func (s *APIServer) handleUpdatePeopleSkipEnrich(w http.ResponseWriter, r *http.
 	return WriteJson(w, http.StatusOK, "ok")
 }
 
+// @Summary Обновление данных человека с обогащением
+// @Description Обновление записи о человеке с возможным обогащением данных в случае изменения имени
+// @Tags people
+// @Accept  json
+// @Produce  json
+// @Param id path int true "ID человека"
+// @Param person body PersonReq true "Данные о человеке"
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ApiError
+// @Failure 404 {object} ApiError
+// @Failure 500 {object} ApiError
+// @Router /people/enrich/{id} [put]
 func (s *APIServer) handleUpdatePeopleEnrich(w http.ResponseWriter, r *http.Request) error {
 	idStr := r.PathValue("id")
 
@@ -205,6 +256,17 @@ func (s *APIServer) handleUpdatePeopleEnrich(w http.ResponseWriter, r *http.Requ
 	return WriteJson(w, http.StatusOK, "ok")
 }
 
+// @Summary Удаление человека
+// @Description Удаление записи о человеке по ID
+// @Tags people
+// @Accept  json
+// @Produce  json
+// @Param id path int true "ID человека"
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ApiError
+// @Failure 404 {object} ApiError
+// @Failure 500 {object} ApiError
+// @Router /people/{id} [delete]
 func (s *APIServer) handleDeletePeople(w http.ResponseWriter, r *http.Request) error {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
@@ -221,4 +283,12 @@ func (s *APIServer) handleDeletePeople(w http.ResponseWriter, r *http.Request) e
 
 	}
 	return WriteJson(w, http.StatusOK, "ok")
+}
+
+type ApiError struct {
+	Error string `json:"error" example:"error message"`
+}
+
+type SuccessResponse struct {
+	Status string `json:"status" example:"success"`
 }

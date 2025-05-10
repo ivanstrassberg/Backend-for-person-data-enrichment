@@ -1,4 +1,273 @@
+definitions:
+  api.ApiError:
+    properties:
+      error:
+        example: error message
+        type: string
+    type: object
+  api.PaginatedFilteredResults:
+    properties:
+      entries_per_page:
+        type: integer
+      entries_total:
+        type: integer
+      page:
+        type: integer
+      pages_total:
+        type: integer
+      people:
+        items:
+          $ref: '#/definitions/db.Person'
+        type: array
+    type: object
+  api.PersonEnriched:
+    properties:
+      age:
+        type: integer
+      gender:
+        type: string
+      name:
+        type: string
+      nationality:
+        type: string
+      patronymic:
+        type: string
+      surname:
+        type: string
+    type: object
+  api.PersonReq:
+    properties:
+      name:
+        type: string
+      patronymic:
+        type: string
+      surname:
+        type: string
+    type: object
+  api.SuccessResponse:
+    properties:
+      status:
+        example: success
+        type: string
+    type: object
+  db.Person:
+    properties:
+      age:
+        type: integer
+      gender:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      nationality:
+        type: string
+      patronymic:
+        type: string
+      surname:
+        type: string
+    type: object
 info:
   contact: {}
-paths: {}
+paths:
+  /people:
+    get:
+      consumes:
+      - application/json
+      description: Получить пагинированный список людей с возможностью фильтрации
+        по различным параметрам
+      parameters:
+      - description: Фильтрация по имени (частичное совпадение)
+        in: query
+        name: fname
+        type: string
+      - description: Фильтрация по фамилии (частичное совпадение)
+        in: query
+        name: surname
+        type: string
+      - description: Фильтрация по отчество
+        in: query
+        name: patronymic
+        type: string
+      - description: Фильтрация по возрасту
+        in: query
+        name: age
+        type: integer
+      - description: Фильтрация по национальности
+        in: query
+        name: nationality
+        type: string
+      - description: Фильтрация по полу
+        in: query
+        name: gender
+        type: string
+      - default: 1
+        description: 'Номер страницы (по умолчанию: 1)'
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 'Количество записей на странице (по умолчанию: 10)'
+        in: query
+        name: entries
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.PaginatedFilteredResults'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ApiError'
+      summary: Список людей с фильтрацией и пагинацией
+      tags:
+      - people
+    post:
+      consumes:
+      - application/json
+      description: Создание новой записи о человеке с автоматическим обогащением данных
+        из внешних API
+      parameters:
+      - description: Данные о человеке
+        in: body
+        name: person
+        required: true
+        schema:
+          $ref: '#/definitions/api.PersonReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ApiError'
+      summary: Создание нового человека с обогащением данных
+      tags:
+      - people
+  /people/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаление записи о человеке по ID
+      parameters:
+      - description: ID человека
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ApiError'
+      summary: Удаление человека
+      tags:
+      - people
+    patch:
+      consumes:
+      - application/json
+      description: Частичное обновление записи о человеке (без обогащения данных)
+      parameters:
+      - description: ID человека
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Частичные данные человека
+        in: body
+        name: person
+        required: true
+        schema:
+          $ref: '#/definitions/api.PersonEnriched'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ApiError'
+      summary: Обновление данных человека без обогащения
+      tags:
+      - people
+  /people/enrich/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Обновление записи о человеке с возможным обогащением данных в случае
+        изменения имени
+      parameters:
+      - description: ID человека
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные о человеке
+        in: body
+        name: person
+        required: true
+        schema:
+          $ref: '#/definitions/api.PersonReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ApiError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ApiError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.ApiError'
+      summary: Обновление данных человека с обогащением
+      tags:
+      - people
 swagger: "2.0"
